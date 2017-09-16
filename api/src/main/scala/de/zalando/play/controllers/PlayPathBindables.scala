@@ -251,8 +251,7 @@ object PlayPathBindables {
 
       def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ArrayWrapper[T]]] = Some(try {
         val line: Option[Seq[String]] = params.get(key) flatMap {
-          case Nil => None
-          case null => None
+          case Nil | null => None
           case single if single.length == 1 && wrapper.separator == '&' => Some(Seq(single.head))
           case single if single.length == 1 => Some(readArray(reader)(single.head))
           case multiple if wrapper.separator == '&' => Some(multiple)
@@ -267,7 +266,7 @@ object PlayPathBindables {
         }
         val lefts = xs collect { case Left(x) => x }
         lazy val rights = xs collect { case Right(x) => x }
-        lazy val success = wrapper.copy(rights.toSeq)
+        lazy val success = wrapper.copy(rights)
         if (lefts.isEmpty) Right(success) else Left(lefts.mkString("\n"))
       } catch {
         case e: Exception => Left(e.getMessage)

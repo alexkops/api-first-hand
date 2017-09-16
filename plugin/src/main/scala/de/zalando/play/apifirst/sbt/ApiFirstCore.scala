@@ -46,9 +46,9 @@ object ApiFirstCore extends AutoPlugin {
   override def projectSettings = Seq(
     libraryDependencies ++= Seq(
       "de.zalando" %% "api-first-hand-api" % BuildInfo.version,
-      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.4.4",
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.6.1",
-      "org.scalacheck" %% "scalacheck" % "1.12.4" % Test,
+      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.9.1",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.1",
+      "org.scalacheck" %% "scalacheck" % "1.13.4" % Test,
       "com.typesafe.play" %% "play-test" % play.core.PlayVersion.current % Test
     )
   ) ++ apiFirstCoreSettings
@@ -61,15 +61,15 @@ object ApiFirstCore extends AutoPlugin {
 
     apiFirstPreparedData := apiFirstRawData.value map { case (file, model) => (file, AstNormaliser.flattenAST(model)) },
 
-    apiFirstPrintRawAstTypes <<= (apiFirstRawData, streams) map prettyPrint(ApiFirstPrettyPrinter.types),
-    apiFirstPrintRawAstParameters <<= (apiFirstRawData, streams) map prettyPrint(ApiFirstPrettyPrinter.parameters),
+    apiFirstPrintRawAstTypes := { prettyPrint(ApiFirstPrettyPrinter.types)(apiFirstRawData.value, streams.value) },
+    apiFirstPrintRawAstParameters := { prettyPrint(ApiFirstPrettyPrinter.parameters)(apiFirstRawData.value, streams.value) },
 
-    apiFirstPrintFlatAstTypes <<= (apiFirstPreparedData, streams) map prettyPrint(ApiFirstPrettyPrinter.types),
-    apiFirstPrintFlatAstParameters <<= (apiFirstPreparedData, streams) map prettyPrint(ApiFirstPrettyPrinter.parameters),
+    apiFirstPrintFlatAstTypes := { prettyPrint(ApiFirstPrettyPrinter.types)(apiFirstPreparedData.value, streams.value) },
+    apiFirstPrintFlatAstParameters := { prettyPrint(ApiFirstPrettyPrinter.parameters)(apiFirstPreparedData.value, streams.value) },
 
-    apiFirstPrintDenotations <<= (apiFirstPreparedData, streams) map prettyPrint(ApiFirstPrettyPrinter.denotations),
+    apiFirstPrintDenotations := { prettyPrint(ApiFirstPrettyPrinter.denotations)(apiFirstPreparedData.value, streams.value) },
 
-    apiFirstStateDiagram <<= (apiFirstPreparedData, streams) map prettyPrint(ApiFirstPrettyPrinter.states)
+    apiFirstStateDiagram := { prettyPrint(ApiFirstPrettyPrinter.states)(apiFirstPreparedData.value, streams.value) }
   )
 
   def prettyPrint(printer: (File, StrictModel) => Seq[String]): (Types.Id[Seq[(File, StrictModel)]], Types.Id[TaskStreams]) => Unit = {

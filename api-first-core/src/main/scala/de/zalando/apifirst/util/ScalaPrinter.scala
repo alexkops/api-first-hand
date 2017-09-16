@@ -98,9 +98,9 @@ object ScalaString {
     case call: ApiCall => apiCall(pad, call)
     case constraint: Security.OAuth2Constraint => oauth2Constraint(pad, constraint)
     case constraint: Security.Constraint => securityConstraint(pad, constraint)
-    case definition: Security.ApiKey => apiKey(pad, definition)
+    case definition: Security.ApiKey => apiKey(definition)
     case definition: Security.OAuth2Definition => oauthDef(definition)
-    case definition: Security.Definition => securityDef(pad, definition)
+    case definition: Security.Definition => securityDef(definition)
 
     case t: EnumTrait => enumTrait(pad, t)
     case t: EnumObject => enumObject(pad, t)
@@ -110,8 +110,8 @@ object ScalaString {
     case a: Arr => arr(pad, a)
     case a: ArrResult => arrResult(pad, a)
 
-    case p: Parameter => parameter(pad, p)
-    case s: Str => str(pad, s)
+    case p: Parameter => parameter(p)
+    case s: Str => str(s)
     case Self => self(pad)
     case s: State => state(pad, s)
     case s: StateResponseInfo => stateResponseInfo(pad, s)
@@ -121,13 +121,13 @@ object ScalaString {
 
     case r: TypesResponseInfo => typeResponseInfo(pad, r)
     case r: ParameterRef => parameterRef(pad, r)
-    case r: TypeRef => typeRef(pad, r)
+    case r: TypeRef => typeRef(r)
     case r: Reference => reference(pad, r)
     case c: Composite => composite(pad, c)
     case c: Container => container(pad, c)
 
-    case t: ProvidedType => providedType(pad, t)
-    case t: Type => typeStr(pad, t)
+    case t: ProvidedType => providedType(t)
+    case t: Type => typeStr(t)
     case stringOption: Option[_] if stringOption.nonEmpty && stringOption.get.getClass == classOf[String] =>
       stringOption.map("\"" + _ + "\"").toString
     case option: Option[_] if option.nonEmpty && option.get.isInstanceOf[AnyRef] =>
@@ -169,10 +169,10 @@ object ScalaString {
         |$pad$securityStr)""".stripMargin
   }
 
-  private def securityDef(pad: String, d: Security.Definition): String =
+  private def securityDef(d: Security.Definition): String =
     s"""${d.getClass.getSimpleName}(${toScalaString("")(d.description)})"""
 
-  private def apiKey(pad: String, k: Security.ApiKey): String =
+  private def apiKey(k: Security.ApiKey): String =
     s"""ApiKey(${toScalaString("")(k.description)}, "${k.name}", ParameterPlace.withName("${k.in}"))"""
 
   private def oauthDef(d: Security.OAuth2Definition): String = {
@@ -196,7 +196,7 @@ object ScalaString {
   private def parameterRef(pad: String, r: ParameterRef): String =
     s"""${pad}ParameterRef(${toScalaString("")(r.name)})"""
 
-  private def typeRef(pad: String, r: TypeRef): String =
+  private def typeRef(r: TypeRef): String =
     s"TypeRef(${toScalaString("")(r.name)})"
 
   private def reference(pad: String, r: Reference): String =
@@ -210,10 +210,10 @@ object ScalaString {
   private def container(pad: String, c: Container): String =
     s"${c.getClass.getSimpleName}(${toScalaString(pad)(c.tpe)}, ${c.meta})"
 
-  private def providedType(pad: String, t: Type): String =
+  private def providedType(t: Type): String =
     t.getClass.getSimpleName + "(" + t.meta + ")"
 
-  private def typeStr(pad: String, t: Type): String =
+  private def typeStr(t: Type): String =
     t.getClass.getSimpleName + "(" + t.name + ", " + t.meta + ")"
 
   private def arr(pad: String, a: Arr): String =
@@ -236,7 +236,7 @@ object ScalaString {
   private def enumObject(pad: String, t: EnumObject): String =
     s"""${pad}EnumObject(${toScalaString("")(t.tpe)}, "${t.fieldValue}", ${t.meta})"""
 
-  private def parameter(pad: String, p: Parameter): String =
+  private def parameter(p: Parameter): String =
     s"""Parameter("${p.name}", ${toScalaString("")(p.typeName)}, ${toScalaString("")(p.fixed)}, ${toScalaString("")(p.default)}, "${p.constraint}", encode = ${p.encode}, ParameterPlace.withName("${p.place}"))"""
 
   private def handlerCall(pad: String, c: HandlerCall): String =
@@ -249,7 +249,7 @@ object ScalaString {
     s"""StateResponseInfo($resStr, ${toScalaString("")(t.default)})"""
   }
 
-  private def str(pad: String, s: Str): String =
+  private def str(s: Str): String =
     s"""Str(${toScalaString("")(s.format)}, ${s.meta})"""
 
   private def state(pad: String, s: State): String =

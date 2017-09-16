@@ -1,6 +1,7 @@
 package de.zalando.play.controllers
 
 import java.net.{ URLDecoder, URLEncoder }
+import javax.inject.Inject
 
 import akka.util.ByteString
 import play.api.http._
@@ -11,6 +12,7 @@ import sun.misc.BASE64Decoder
 
 import scala.concurrent.Future
 import play.api.libs.iteratee.Execution.Implicits.trampoline
+import play.api.libs.ws.ahc.AhcWSClient
 
 import scala.language.implicitConversions
 
@@ -23,11 +25,11 @@ import scala.language.implicitConversions
  * @param onUnauthorized
  * @tparam U
  */
-class FutureAuthenticatedBuilder[U](
+abstract class FutureAuthenticatedBuilder[U, B](
   userinfo: RequestHeader => Future[Option[U]],
   onUnauthorized: RequestHeader => Result
 )
-    extends ActionBuilder[({ type R[A] = AuthenticatedRequest[A, U] })#R] {
+  extends ActionBuilder[({ type R[A] = AuthenticatedRequest[A, U] })#R, B] {
 
   override def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A, U]) => Future[Result]): Future[Result] =
     authenticate(request, block)
@@ -43,7 +45,7 @@ class FutureAuthenticatedBuilder[U](
   }
 }
 
-object SwaggerSecurityExtractors extends BasicAuthSecurityExtractor with OAuthResourceOwnerPasswordCredentialsFlow {
+class SwaggerSecurityExtractors @Inject() (val wsClient: AhcWSClient) extends BasicAuthSecurityExtractor with OAuthResourceOwnerPasswordCredentialsFlow {
   private implicit def option2futureOption[User](o: Option[User]): Future[Option[User]] = Future.successful(o)
 
   def basicAuth[User >: Any]: RequestHeader => ((String, String) => User) => Future[Option[User]] =
@@ -61,10 +63,7 @@ object SwaggerSecurityExtractors extends BasicAuthSecurityExtractor with OAuthRe
     scopes => tokenUrl => header => convertToUser => {
       val futureResult = header.headers.get(HeaderNames.AUTHORIZATION).flatMap(decodeBearer).map { token: String =>
         checkOAuthToken(tokenUrl, token, scopes: _*)
-      } match {
-        case None => Future.successful(None)
-        case Some(f) => f
-      }
+      }.getOrElse(Future.successful(None))
       futureResult.map(_.map(convertToUser))
     }
 
@@ -107,15 +106,15 @@ trait OAuthCommon {
  */
 trait OAuthResourceOwnerPasswordCredentialsFlow extends OAuthCommon {
   import play.api.libs.ws._
-  import play.api.Play.current
+  val wsClient: AhcWSClient
   private val placeHolder = ":token"
   protected def checkOAuthToken(tokenUrl: String, token: String, requiredScopes: String*): Future[Option[JsValue]] = {
     val escapedToken = URLEncoder.encode(token, "UTF-8")
     val (method, url, body) =
       if (tokenUrl.contains(placeHolder)) (HttpVerbs.GET, tokenUrl.replaceAllLiterally(placeHolder, escapedToken), "")
       else (HttpVerbs.POST, tokenUrl, s"token=$escapedToken")
-    val request = WS.url(url).withMethod(method).withFollowRedirects(true).
-      withBody(InMemoryBody(ByteString(body.getBytes))).withHeaders(HeaderNames.ACCEPT -> MimeTypes.JSON, HeaderNames.CONTENT_TYPE -> MimeTypes.FORM)
+    val request = wsClient.url(url).withMethod(method).withFollowRedirects(true).
+      withBody(InMemoryBody(ByteString(body.getBytes))).withHttpHeaders(HeaderNames.ACCEPT -> MimeTypes.JSON, HeaderNames.CONTENT_TYPE -> MimeTypes.FORM)
     request.execute().map(_.json).map { json =>
       val active = (json \ "active").asOpt[Boolean].getOrElse(true)
       lazy val scope = (json \ "scope").asOpt[String]

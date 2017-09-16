@@ -23,7 +23,7 @@ object RuleGenerator {
 
     val path = convertPath(call.path)
 
-    val comments = List.empty
+    val comments: List[Comment] = List.empty
     Route(verb, path, handlerCall, comments)
   }
 

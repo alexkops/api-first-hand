@@ -31,9 +31,9 @@ object ApiFirstSwaggerParser extends AutoPlugin {
   override def projectSettings = Seq(
     libraryDependencies ++= Seq(
       "de.zalando" %% "api-first-hand-api" % BuildInfo.version,
-      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.4.4",
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.6.1",
-      "org.scalacheck" %% "scalacheck" % "1.12.4" % Test,
+      "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.9.1",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.1",
+      "org.scalacheck" %% "scalacheck" % "1.13.4" % Test,
       "com.typesafe.play" %% "play-test" % play.core.PlayVersion.current % Test
     )
   ) ++ inConfig(Compile)(swaggerParserSettings)
@@ -50,12 +50,13 @@ object ApiFirstSwaggerParser extends AutoPlugin {
 
     swaggerDefinitions := (resourceDirectory.value * "*.yaml").get,
 
-    watchSources in Defaults.ConfigGlobal <++= sources in swaggerDefinitions,
+    watchSources in Defaults.ConfigGlobal ++= { sources in swaggerDefinitions }.value,
 
-    swaggerParseSpec <<= swaggerDefinitions map { t => t.map(SwaggerParser.readSwaggerModel) },
+    swaggerParseSpec := { swaggerDefinitions map { t => t.map(SwaggerParser.readSwaggerModel) } }.value,
 
-    swaggerSpec2Ast in Defaults.ConfigGlobal <<= (swaggerDefinitions, swaggerParseSpec) map { (t, s) =>
-      s.zip(t) map { case ((uri, model), file) => file -> SwaggerParser.convertModelToAST(file, uri, model) }
-    }
-  )
+    swaggerSpec2Ast in Defaults.ConfigGlobal := {
+      swaggerParseSpec.value.zip(swaggerDefinitions.value) map {
+        case ((uri, model), file) => file -> SwaggerParser.convertModelToAST(file, uri, model)
+      }
+    })
 }

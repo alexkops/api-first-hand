@@ -76,7 +76,7 @@ class ParametersConverter(val base: URI, val model: SwaggerModel, val keyPrefix:
     } getOrElse {
       throw new IllegalStateException(s"Could not find parameter definition for reference $ref")
     }
-    val typeDef = findTypeByParameterRef(prefix, ref)
+    val typeDef = findTypeByParameterRef(ref)
     val (constraint, encode) = Constraints(parameter.in)
     val place = ParameterPlace.withName(parameter.in)
     Application.Parameter(parameter.name, typeDef, FIXED, default, constraint, encode, place)
@@ -105,7 +105,7 @@ class ParametersConverter(val base: URI, val model: SwaggerModel, val keyPrefix:
     (name, typeDef)
   }
 
-  private def findTypeByParameterRef(fullPath: Reference, ref: String): Type = {
+  private def findTypeByParameterRef(ref: String): Type = {
     val parent = base / ref
     typeDefs.find(_._1.parent == parent).map(_._2) getOrElse {
       throw new IllegalStateException(s"Could not find parameter definition with reference $ref")

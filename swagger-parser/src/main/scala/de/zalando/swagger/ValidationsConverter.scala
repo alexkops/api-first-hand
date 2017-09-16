@@ -52,7 +52,7 @@ object ValidationsConverter {
       case c: NonBodyParameterCommons[_, _] => Some(c.format)
       case _ => None
     }
-    val emailConstraint: Option[String] = if (format.exists(_ == "email")) Some("emailAddress") else None
+    val emailConstraint: Option[String] = if (format.contains("email")) Some("emailAddress") else None
     val result = Seq(
       ifDefined(p.maxLength, s"maxLength(${p.maxLength.get})"),
       ifDefined(p.minLength, s"minLength(${p.minLength.get})"),

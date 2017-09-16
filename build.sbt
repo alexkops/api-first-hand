@@ -1,10 +1,9 @@
-import bintray.Keys._
 import sbt._
 
-val PlayVersion = "2.5.4"
-val Scala10 = "2.10.5"
-val Scala11 = "2.11.8"
-val ProjectVersion = "0.2.3"
+val PlayVersion = "2.7.+"
+//val PlayVersion = "2.7.0-2017-09-08-66cd842-SNAPSHOT"
+val ScalaVersion = "2.12.3"
+val ProjectVersion = "0.3"
 
 val deps = new Dependencies(PlayVersion, ProjectVersion)
 
@@ -13,7 +12,6 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 lazy val common = (project in file("common"))
   .settings(commonSettings: _*)
   .settings(
-    scalaVersion := Scala10,
     name := "api-first-hand-common",
     libraryDependencies ++= deps.jacksonsJava ++ deps.test
   )
@@ -23,7 +21,6 @@ lazy val common = (project in file("common"))
 lazy val api = (project in file("api"))
   .settings(commonSettings: _*)
   .settings(
-    scalaVersion := Scala11,
     name := "api-first-hand-api",
     libraryDependencies ++= deps.api ++ deps.test
   )
@@ -32,15 +29,12 @@ lazy val swaggerModel = (project in file("swagger-model"))
   .settings(commonSettings: _*)
   .settings(
     name := "swagger-model",
-    scalaVersion := Scala10,
-    crossScalaVersions := Seq(Scala10, Scala11),
     libraryDependencies ++= deps.swaggerModel ++ deps.test
   )
 
 lazy val apiFirstCore = (project in file("api-first-core"))
   .settings(commonSettings: _*)
   .settings(
-    scalaVersion := Scala10,
     name := "api-first-core",
     libraryDependencies ++= deps.test
   )
@@ -48,16 +42,14 @@ lazy val apiFirstCore = (project in file("api-first-core"))
 lazy val swaggerParser = (project in file("swagger-parser"))
   .settings(commonSettings: _*)
   .settings(
-    scalaVersion := Scala10,
     name := "swagger-parser",
-    libraryDependencies ++= deps.swaggerParser(scalaVersion.value) ++ deps.test
+    libraryDependencies ++= deps.swaggerParser ++ deps.test
   )
   .dependsOn(swaggerModel, apiFirstCore)
 
 lazy val playScalaGenerator = (project in file("play-scala-generator"))
   .settings(commonSettings: _*)
   .settings(
-    scalaVersion := Scala10,
     name := "play-scala-generator",
     libraryDependencies ++= deps.playScalaGenerator ++ deps.test
   )
@@ -67,19 +59,20 @@ lazy val playScalaGenerator = (project in file("play-scala-generator"))
 lazy val plugin = (project in file("plugin"))
   .enablePlugins(BuildInfoPlugin)
   .settings(commonSettings: _*)
-  .settings(scriptedSettings: _*)
+  //.settings(scriptedSettings: _*)
   .settings(
     libraryDependencies ++= deps.test,
     name := "sbt-api-first-hand",
     sbtPlugin := true,
-    addSbtPlugin("com.typesafe.play" % "sbt-plugin" % PlayVersion),
+    //Needs https://github.com/playframework/playframework/pull/7830
+    addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.5", "0.13", "2.10"),
 
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++
         Seq(
           "-Dproject.version=" + version.value,
-          "-Dscala.version=" + Scala11,
+          "-Dscala.version=" + ScalaVersion,
           "-Xmx1024M",
           "-XX:ReservedCodeCacheSize=256M"
         )
@@ -108,8 +101,8 @@ lazy val root = (project in file("."))
   )
   .aggregate(common, swaggerModel, api, swaggerParser, apiFirstCore, playScalaGenerator, plugin)
 
-def commonSettings: Seq[Setting[_]] = bintrayPublishSettings ++ Seq(
-  ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
+def commonSettings: Seq[Setting[_]] = Seq(
+  scalaVersion := ScalaVersion,
   ivyLoggingLevel := UpdateLogging.DownloadOnly,
   version := ProjectVersion,
   sbtPlugin := false,
@@ -118,17 +111,16 @@ def commonSettings: Seq[Setting[_]] = bintrayPublishSettings ++ Seq(
   fork in(Test, run) := true,
   autoScalaLibrary := true,
   resolvers ++= Seq(
-    Resolver.typesafeRepo("releases"),
-    Resolver.typesafeIvyRepo("releases"),
     Resolver.bintrayRepo("zalando", "sbt-plugins"),
     "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
     "zalando-maven" at "https://dl.bintray.com/zalando/maven",
-    "jeffmay" at "https://dl.bintray.com/jeffmay/maven"
+    "jeffmay" at "https://dl.bintray.com/jeffmay/maven",
+    Resolver.sonatypeRepo("snapshots")
   ),
   licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
   publishMavenStyle := false,
-  repository in bintray := "sbt-plugins",
-  bintrayOrganization in bintray := Some("zalando"),
+  bintrayRepository  := "sbt-plugins",
+  bintrayOrganization  := Some("zalando"),
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding", "UTF-8", // yes, this is 2 args
@@ -144,7 +136,7 @@ def commonSettings: Seq[Setting[_]] = bintrayPublishSettings ++ Seq(
   scalastyleFailOnError := false,
   coverageEnabled := false,
   excludeFilter in scalariformFormat := (excludeFilter in scalariformFormat).value || dontFormatTestModels
-) ++ Lint.all ++ scalariformSettings
+) ++ Lint.all ++ scalariformSettings(false)
 
 // https://github.com/sbt/sbt-scalariform#advanced-configuration for more options.
 
@@ -156,7 +148,4 @@ coverageMinimum := 80
 
 coverageFailOnMinimum := false
 
-coverageHighlighting := {
-  if (scalaBinaryVersion.value == "2.10") false
-  else false
-}
+coverageHighlighting := false

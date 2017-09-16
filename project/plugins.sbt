@@ -1,16 +1,11 @@
 resolvers += Resolver.sonatypeRepo("releases")
 
-addSbtPlugin("com.eed3si9n"     % "sbt-buildinfo" % "0.6.1")
-addSbtPlugin("org.scoverage"    % "sbt-scoverage" % "1.3.5")
-addSbtPlugin("me.lessis"        % "bintray-sbt"   % "0.2.1")
+addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.7.0")
+addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "1.5.1")
+addSbtPlugin("org.foundweekends" % "sbt-bintray"   % "0.5.1")
 
-addSbtPlugin("org.scalariform"  % "sbt-scalariform" % "1.6.0")
-addSbtPlugin("org.brianmckenna" % "sbt-wartremover"         % "0.13")
-addSbtPlugin("org.scalastyle"   %% "scalastyle-sbt-plugin"  % "0.7.0")
+addSbtPlugin("org.scalariform"  % "sbt-scalariform"         % "1.8.0")
+addSbtPlugin("org.wartremover"  % "sbt-wartremover"         % "2.2.0")
+addSbtPlugin("org.scalastyle"   %% "scalastyle-sbt-plugin"  % "1.0.0")
 
-libraryDependencies <+= (sbtVersion) { sv =>
-  "org.scala-sbt" % "scripted-plugin" % sv
-}
-
-
-
+libraryDependencies += { "org.scala-sbt" %% "scripted-plugin" % sbtVersion.value }

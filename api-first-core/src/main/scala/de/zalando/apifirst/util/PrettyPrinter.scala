@@ -60,12 +60,12 @@ object ShortString {
     case t: TypeDef => typeDef(pad, t)
     case c: Composite => composite(pad, c)
     case c: Container => container(pad, c)
-    case t: TypeRef => typeRef(pad, t)
-    case t: Type => typeStr(pad, t)
+    case t: TypeRef => typeRef(t)
+    case t: Type => typeStr(t)
     case other => other.toString
   }
 
-  private def typeStr(pad: String, t: Type) = t.getClass.getSimpleName
+  private def typeStr(t: Type) = t.getClass.getSimpleName
 
   private def field(pad: String, f: Field) =
     s"""\n${pad}Field(${f.name}, ${toShortString(pad + "\t")(f.tpe)})"""
@@ -73,7 +73,7 @@ object ShortString {
   private def typeDef(pad: String, t: TypeDef) =
     s"""TypeDef(${t.name}, Seq(${t.fields.map(toShortString(pad)).mkString(", ")}))"""
 
-  private def typeRef(pad: String, t: TypeRef) =
+  private def typeRef(t: TypeRef) =
     s"${t.getClass.getSimpleName}(${t.name})"
 
   private def container(pad: String, c: Container) =

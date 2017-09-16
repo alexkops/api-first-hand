@@ -11,7 +11,7 @@ import java.net.{ URI, URL }
 import com.fasterxml.jackson.core.{ JsonParseException, JsonParser }
 import com.fasterxml.jackson.databind.{ DeserializationFeature, JsonMappingException, ObjectMapper }
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml
+//import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import de.zalando.swagger.strictModel._
 import me.andrz.jackson.{ JsonContext, JsonReferenceProcessor, ObjectMapperFactory }
@@ -32,7 +32,7 @@ trait StrictParser {
  * @param contents
  * @param factory
  */
-class TransientJsonContext(file: File, contents: String, factory: ObjectMapperFactory) extends JsonContext(file) {
+class TransientJsonContext(file: File, contents: String, factory: ObjectMapperFactory) extends JsonContext(file, 0) {
   setUrl(file.toURI.toURL)
   private val rootNode = factory.create(getUrl).readTree(contents)
   setNode(rootNode)
@@ -73,7 +73,7 @@ private[swagger] abstract class StrictSwaggerParser extends StrictParser {
         val path = ex.getPath.asScala.map(_.getFieldName).mkString(" → ")
         val msg = if (path.nonEmpty) " through reference chain: " + path else ""
 
-        throw new JsonParseException(ex.getOriginalMessage + msg, ex.getLocation)
+        throw new JsonParseException(ex.getProcessor.asInstanceOf[JsonParser], ex.getOriginalMessage + msg, ex.getLocation)
     } apply {
       mapper(file.toURI.toURL).treeToValue(node, classOf[SwaggerModel])
     }
@@ -118,13 +118,14 @@ object StrictYamlParser extends StrictSwaggerParser {
    *
    * @param file
    * @return
+   * TODO: Check if still needed
+   * override def prepareFile(file: File): String = {
+   * val input = super.prepareFile(file)
+   * val yaml = new Yaml
+   * val normalized = yaml.load(input)
+   * mapper(file.toURI.toURL).writeValueAsString(normalized)
+   * }
    */
-  override def prepareFile(file: File): String = {
-    val input = super.prepareFile(file)
-    val yaml = new Yaml
-    val normalized = yaml.load(input)
-    mapper(file.toURI.toURL).writeValueAsString(normalized)
-  }
 }
 
 object StrictJsonParser extends StrictSwaggerParser {

@@ -51,7 +51,7 @@ object ApiFirstPlayScalaCodeGenerator extends AutoPlugin {
 
   override def projectSettings = Seq(
     libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.12.4" % Test,
+      "org.scalacheck" %% "scalacheck" % "1.13.4" % Test,
       "com.typesafe.play" %% "play-test" % play.core.PlayVersion.current % Test
     )
   ) ++ Seq(
@@ -73,18 +73,20 @@ object ApiFirstPlayScalaCodeGenerator extends AutoPlugin {
 
     playScalaAutogenerateControllers := true,
 
-    playScalaCompilationTasks <<= apiFirstPreparedData map { task =>
-      val version = if (BuildInfo.version.endsWith("-SNAPSHOT")) {
-        // This essentially disables incremental compilation if we're using a SNAPSHOT version of the playScala plugin.
-        // You may want to get rid of this eventually, but during development, it's going to make things a lot nicer,
-        // since otherwise you'll need to do a clean every time you update the plugin if you want to regenerate the
-        // sources
-        BuildInfo.version + System.currentTimeMillis()
-      } else {
-        BuildInfo.version
+    playScalaCompilationTasks := {
+      apiFirstPreparedData map { task =>
+        val version = if (BuildInfo.version.endsWith("-SNAPSHOT")) {
+          // This essentially disables incremental compilation if we're using a SNAPSHOT version of the playScala plugin.
+          // You may want to get rid of this eventually, but during development, it's going to make things a lot nicer,
+          // since otherwise you'll need to do a clean every time you update the plugin if you want to regenerate the
+          // sources
+          BuildInfo.version + System.currentTimeMillis()
+        } else {
+          BuildInfo.version
+        }
+        task map { case (file, model) => (file, version, model) }
       }
-      task map { case (file, model) => (file, version, model) }
-    },
+    }.value,
 
     playScalaApiFirstApp := playScalaRoutes.value
   )
@@ -99,10 +101,15 @@ object ApiFirstPlayScalaCodeGenerator extends AutoPlugin {
     Seq(
       target in playScalaTests := crossTarget.value / "routes" / Defaults.nameForSrc(Test.name),
       playScalaTests := {
-        if (playScalaAutogenerateTests.value) {
-          val rout = playScalaRoutes.value
-          playScalaGenerateTests.value
-        } else Nil
+        /* TODO: Fix "Problem: `playScalaGenerateTests` is inside the if expression of a regular task.
+                      Regular tasks always evaluate task inside the bodies of if expressions.
+                 Solution:
+                   1. If you only want to evaluate it when the if predicate is true or false, use a dynamic task.
+                   2. Otherwise, make the static evaluation explicit by evaluating `playScalaGenerateTests` outside the if expression.*/
+        //if (playScalaAutogenerateTests.value) {
+        val rout = playScalaRoutes.value
+        playScalaGenerateTests.value
+        //} else Nil
       },
       managedSources ++= playScalaTests.value
     )
@@ -135,9 +142,11 @@ object ApiFirstPlayScalaCodeGenerator extends AutoPlugin {
   def playScalaRoutesSettings: Seq[Setting[_]] = Seq(
     target in playScalaRoutes := crossTarget.value / "routes" / Defaults.nameForSrc(Compile.name),
     playScalaRoutes := {
-      if (playScalaAutogenerateControllers.value) {
-        val cont = playScalaControllers.value
-      }
+      //TODO: Fix "Problem: `playScalaGenerateTests` is inside the if expression of a regular task.
+      //  Regular tasks always evaluate task inside the bodies of if expressions."
+      //if (playScalaAutogenerateControllers.value) {
+      val cont = playScalaControllers.value
+      //}
       playScalaGenerateRoutes(InjectedRoutesGenerator).value
     },
     managedSources ++= playScalaRoutes.value

@@ -2,7 +2,6 @@ package de.zalando.play.controllers
 
 import java.math.BigInteger
 
-import play.api.data.validation.ValidationError
 import play.api.libs.json.{ JsError, _ }
 
 import scala.reflect.ClassTag
@@ -49,9 +48,9 @@ trait MissingDefaultReads extends DefaultReads {
     case JsString(s) =>
       scala.util.control.Exception.catching(classOf[NumberFormatException])
         .opt(JsSuccess(BigInt(s)))
-        .getOrElse(JsError(ValidationError("error.expected.numberformatexception")))
+        .getOrElse(JsError(JsonValidationError("error.expected.numberformatexception")))
     case JsNumber(d) => JsSuccess(d.toBigInt())
-    case _ => JsError(ValidationError("error.expected.jsnumberorjsstring"))
+    case _ => JsError(JsonValidationError("error.expected.jsnumberorjsstring"))
   }
 
   /**
@@ -61,9 +60,9 @@ trait MissingDefaultReads extends DefaultReads {
     case JsString(s) =>
       scala.util.control.Exception.catching(classOf[NumberFormatException])
         .opt(JsSuccess(new java.math.BigInteger(s)))
-        .getOrElse(JsError(ValidationError("error.expected.numberformatexception")))
+        .getOrElse(JsError(JsonValidationError("error.expected.numberformatexception")))
     case JsNumber(d) => JsSuccess(d.toBigInt().bigInteger)
-    case _ => JsError(ValidationError("error.expected.jsnumberorjsstring"))
+    case _ => JsError(JsonValidationError("error.expected.jsnumberorjsstring"))
   }
 
   /**
@@ -74,7 +73,7 @@ trait MissingDefaultReads extends DefaultReads {
       val instance = implicitly[ClassTag[T]].runtimeClass.getConstructor(classOf[String]).newInstance(s)
       JsSuccess(instance.asInstanceOf[T])
     case _ =>
-      JsError(ValidationError("error.expected.jsstring"))
+      JsError(JsonValidationError("error.expected.jsstring"))
   }
 
   import play.api.libs.json.JsReadable

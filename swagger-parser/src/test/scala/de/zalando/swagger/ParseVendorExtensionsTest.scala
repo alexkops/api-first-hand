@@ -3,10 +3,10 @@ package de.zalando.swagger
 import java.io.File
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.parser.ParserException
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.MarkedYAMLException
 import de.zalando.apifirst.Application.ApiCall
-import de.zalando.apifirst.Http.{ GET, POST, PUT }
-import org.scalatest.{ FunSpec, MustMatchers }
+import de.zalando.apifirst.Http.{GET, POST, PUT}
+import org.scalatest.{FunSpec, MustMatchers}
 
 class ParseVendorExtensionsTest extends FunSpec with MustMatchers with ExpectedResults {
 
@@ -50,9 +50,9 @@ class ParseVendorExtensionsTest extends FunSpec with MustMatchers with ExpectedR
       exception.getMessage mustEqual "Malformed transition definitions"
     }
     it("should reject hypermedia definitions with incorrect initial state") {
-      intercept[ParserException] {
+      intercept[MarkedYAMLException] {
         StrictYamlParser.parse(hypermediaNOk2)
-      }.getClass mustBe classOf[ParserException]
+      }.getClass mustBe classOf[MarkedYAMLException]
     }
 
     it("should read error mappings and assign right preference to them") {

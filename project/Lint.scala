@@ -48,11 +48,11 @@ object Lint {
         Wart.Serializable,
         Wart.Product,
         // Ban calling partial methods because they behave surprisingly
-        Wart.ListOps,
+        //Wart.ListOps,   #value ListOps is not a member of object wartremover.Wart
         Wart.OptionPartial,
         Wart.EitherProjectionPartial,
         // Ban applying Scala's implicit any2String because it usually indicates a code error.
-        Wart.Any2StringAdd
+        //Wart.Any2StringAdd #value Any2StringAdd is not a member of object wartremover.Wart
       )
     }
   }
@@ -68,7 +68,7 @@ object Lint {
 
   def addFoursquareLinterToLintTarget: Seq[_root_.sbt.Def.Setting[_ >: _root_.sbt.Task[Seq[String]] with Seq[_root_.sbt.ModuleID] <: Equals]] = {
     Seq(
-      addCompilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.12"),
+      addCompilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.17"),
       // See https://github.com/HairyFotr/linter#list-of-implemented-checks for a list of checks that foursquare linter
       // implements
       // By default linter enables all checks.

@@ -1,7 +1,7 @@
 package de.zalando.play.controllers
 
 import play.api.data.validation._
-import play.api.i18n.{ I18nSupport, Messages }
+import play.api.i18n.{ I18nSupport, Messages, MessagesProvider }
 
 /**
  * @since 03.09.2015
@@ -50,7 +50,7 @@ trait ValidationTranslator {
 
   this: I18nSupport =>
 
-  def translateParsingErrors(errors: Seq[ParsingError]): TranslatedParsingErrorsContainer =
+  def translateParsingErrors(errors: Seq[ParsingError])(implicit provider: MessagesProvider): TranslatedParsingErrorsContainer =
     TranslatedParsingErrorsContainer(
       errors.map { pe: ParsingError =>
         TranslatedParsingError(reference = pe.reference, message = Messages(pe.messages, pe.args: _*))

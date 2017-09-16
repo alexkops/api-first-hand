@@ -14,7 +14,7 @@ object WriteableWrapper {
   implicit def writeable2wrapper[T](w: Writeable[T])(implicit m: Manifest[T]): WriteableWrapper[T] =
     WriteableWrapper(w, m)
   implicit val anyContentAsMultipartFormWritable: Writeable[AnyContentAsMultipartFormData] = {
-    MultipartFormDataWritable.singleton.map(_.mdf)
+    MultipartFormDataWritable.singleton.map(_.asMultipartFormData.get)
   }
 }
 
