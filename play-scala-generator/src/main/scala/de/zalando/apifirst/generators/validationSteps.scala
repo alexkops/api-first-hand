@@ -82,7 +82,7 @@ trait ParametersValidatorsStep extends EnrichmentStep[Parameter] with Validators
    * @return
    */
   private def parametersValidations(table: DenotationTable)(ref: Reference, param: Parameter) =
-    constraints0(ref, param.typeName)(table)
+    constraints0(ref -> param.typeName)(table)
 
   /**
    * Depending upon, what we want to validate, we can have one of following situations:
@@ -136,7 +136,8 @@ trait ParametersValidatorsStep extends EnrichmentStep[Parameter] with Validators
       constraints
   }
 
-  private def compositeConstraints(r: Reference, t: Composite, suffix: String, key: String)(implicit table: DenotationTable): Seq[(String, Map[String, Any])] = {
+  private def compositeConstraints(r: Reference, t: Composite, suffix: String, key: String)
+                                  (implicit table: DenotationTable): Seq[(String, Map[String, Any])] = {
     val descendants = t.descendants.flatMap { f =>
       val delegate = delegateName(r, f, suffix)
       constraints0(delegate -> f)

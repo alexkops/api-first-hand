@@ -93,7 +93,6 @@ lazy val plugin = (project in file("plugin"))
   .dependsOn(common, apiFirstCore, playScalaGenerator, swaggerParser, swaggerModel)
 
 lazy val root = (project in file("."))
-  // Use sbt-doge cross building since we have different projects with different scala versions
   .settings(commonSettings: _*)
   .settings(
     name := "api-first-hand-root",

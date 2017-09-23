@@ -2,20 +2,20 @@ package de.zalando.play.generator.sbt
 
 import java.io.File
 
-import com.typesafe.sbt.web.incremental.{ OpSuccess, _ }
+import com.typesafe.sbt.web.incremental.{OpSuccess, _}
 import de.zalando.BuildInfo
 import de.zalando.apifirst.Application.StrictModel
 import de.zalando.play.apifirst.sbt.ApiFirstCore
 import de.zalando.play.apifirst.sbt.ApiFirstCore.autoImport._
-import de.zalando.play.compiler.{ CompilationResult, PlayScalaCompilationTask, PlayScalaCompiler }
+import de.zalando.play.compiler.{CompilationResult, PlayScalaCompilationTask, PlayScalaCompiler}
 import de.zalando.play.controllers.WriterFactories
 import de.zalando.play.generator.routes.PlayScalaRoutesCompiler
-import play.routes.compiler.{ InjectedRoutesGenerator, RoutesGenerator }
+import play.routes.compiler.{InjectedRoutesGenerator, RoutesGenerator}
 import play.sbt.routes.RoutesCompiler
 import sbt.Keys._
-import sbt.{ Def, Defaults, Task, TaskKey, _ }
+import sbt.{Def, Defaults, Task, TaskKey, _}
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * @since 24.05.2016.
@@ -100,19 +100,16 @@ object ApiFirstPlayScalaCodeGenerator extends AutoPlugin {
   def playScalaTestSettings: Seq[Setting[_]] =
     Seq(
       target in playScalaTests := crossTarget.value / "routes" / Defaults.nameForSrc(Test.name),
-      playScalaTests := {
-        /* TODO: Fix "Problem: `playScalaGenerateTests` is inside the if expression of a regular task.
-                      Regular tasks always evaluate task inside the bodies of if expressions.
-                 Solution:
-                   1. If you only want to evaluate it when the if predicate is true or false, use a dynamic task.
-                   2. Otherwise, make the static evaluation explicit by evaluating `playScalaGenerateTests` outside the if expression.*/
-        //if (playScalaAutogenerateTests.value) {
-        val rout = playScalaRoutes.value
-        playScalaGenerateTests.value
-        //} else Nil
-      },
+      playScalaTests := playScalaTestsDyn.value,
       managedSources ++= playScalaTests.value
     )
+
+  private val playScalaTestsDyn: Def.Initialize[Task[Seq[File]]] = Def.taskDyn {
+    if (playScalaAutogenerateTests.value) {
+      val rout = playScalaRoutes.value
+      playScalaGenerateTests
+      } else Def.task( Seq[File]() )
+  }
 
   def playScalaControllerSettings: Seq[Setting[_]] = Seq(
     target in playScalaControllers := scalaSource.value,
@@ -141,16 +138,16 @@ object ApiFirstPlayScalaCodeGenerator extends AutoPlugin {
 
   def playScalaRoutesSettings: Seq[Setting[_]] = Seq(
     target in playScalaRoutes := crossTarget.value / "routes" / Defaults.nameForSrc(Compile.name),
-    playScalaRoutes := {
-      //TODO: Fix "Problem: `playScalaGenerateTests` is inside the if expression of a regular task.
-      //  Regular tasks always evaluate task inside the bodies of if expressions."
-      //if (playScalaAutogenerateControllers.value) {
-      val cont = playScalaControllers.value
-      //}
-      playScalaGenerateRoutes(InjectedRoutesGenerator).value
-    },
+    playScalaRoutes := playScalaRoutesDyn.value,
     managedSources ++= playScalaRoutes.value
   )
+
+  private val playScalaRoutesDyn: Def.Initialize[Task[Seq[File]]] = Def.taskDyn {
+    if (playScalaAutogenerateControllers.value) {
+      val cont = playScalaControllers.value
+    }
+    playScalaGenerateRoutes(InjectedRoutesGenerator)
+  }
 
   val providedWriterFactories = WriterFactories.factories.keySet
 

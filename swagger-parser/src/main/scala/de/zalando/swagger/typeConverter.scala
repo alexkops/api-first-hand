@@ -276,7 +276,7 @@ class TypeConverter(base: URI, model: strictModel.SwaggerModel, keyPrefix: Strin
 
   private def fromParameterType(name: Reference, tpe: ParameterType.Value, format: String, meta: TypeMeta)(required: Option[Seq[String]], typeName: Reference,
     default: Default[_], enum: EnumValidation.Enum[_]): NamedType = {
-    val result = fromParameterTypePlain(tpe, format)(meta)
+    val result = fromParameterTypePlain(tpe -> format)(meta)
     if (enum.isDefined)
       enumFromPrimitiveType(name, enum.get, required, meta, typeName, result, default)
     else
@@ -312,7 +312,7 @@ class TypeConverter(base: URI, model: strictModel.SwaggerModel, keyPrefix: Strin
 
   private def wrapSingleInArray(t: NamedType, m: TypeMeta, collectionFormat: Option[String], nonBodyParameter: Boolean): NamedType = {
     val wrapper =
-      if (nonBodyParameter) Domain.Arr(t._2, m, collectionFormat.map(_.toString).getOrElse(CollectionFormat.default.toString))
+      if (nonBodyParameter) Domain.Arr(t._2, m, collectionFormat.getOrElse(CollectionFormat.default.toString))
       else Domain.ArrResult(t._2, m)
     t._1 -> wrapper
   }
