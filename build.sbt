@@ -1,7 +1,7 @@
 import sbt._
 
-val PlayVersion = "2.7.+"
-//val PlayVersion = "2.7.0-2017-09-08-66cd842-SNAPSHOT"
+val PlayVersion = "2.6.5"
+//val PlayVersion = "2.7.+"
 val ScalaVersion = "2.12.3"
 val ProjectVersion = "0.3"
 
@@ -64,8 +64,7 @@ lazy val plugin = (project in file("plugin"))
     libraryDependencies ++= deps.test,
     name := "sbt-api-first-hand",
     sbtPlugin := true,
-    //Needs https://github.com/playframework/playframework/pull/7830
-    addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.5", "0.13", "2.10"),
+    addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.6-2017-10-05-829d140-SNAPSHOT"),
 
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     scriptedLaunchOpts := {
